@@ -20,7 +20,7 @@
       <item row="1" column="0">
        <layout class="QGridLayout" name="gridLayout_2">
         <item row="1" column="1">
-         <widget class="QPushButton" name="btnFirmwareversion">
+         <widget class="QPushButton" name="btnNand_2">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
             <horstretch>0</horstretch>
@@ -28,11 +28,50 @@
            </sizepolicy>
           </property>
           <property name="text">
-           <string>Firmwareversion</string>
+           <string>NAND2</string>
           </property>
          </widget>
         </item>
         <item row="2" column="0">
+         <widget class="QPushButton" name="btnFirmwareversion_3">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string>Firmwareversion3</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="1">
+         <widget class="QPushButton" name="btnNand_3">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string>NAND3</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QPushButton" name="btnFirmwareversion_2">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string>Firmwareversion2</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
          <widget class="QPushButton" name="btnNand">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
@@ -45,8 +84,8 @@
           </property>
          </widget>
         </item>
-        <item row="1" column="0">
-         <widget class="QPushButton" name="btnAutotest">
+        <item row="0" column="0">
+         <widget class="QPushButton" name="btnFirmwareversion">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
             <horstretch>0</horstretch>
@@ -54,14 +93,11 @@
            </sizepolicy>
           </property>
           <property name="text">
-           <string>AutoTest</string>
+           <string>Firmwareversion</string>
           </property>
          </widget>
         </item>
        </layout>
-      </item>
-      <item row="1" column="2">
-       <widget class="QListWidget" name="listWidget"/>
       </item>
       <item row="0" column="0" colspan="3">
        <layout class="QHBoxLayout" name="horizontalLayout_2">
@@ -86,7 +122,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QPushButton" name="starttest">
+         <widget class="QPushButton" name="autotest">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
             <horstretch>0</horstretch>
@@ -94,11 +130,14 @@
            </sizepolicy>
           </property>
           <property name="text">
-           <string>Start Test</string>
+           <string>Auto Test</string>
           </property>
          </widget>
         </item>
        </layout>
+      </item>
+      <item row="1" column="2">
+       <widget class="QListWidget" name="listWidget"/>
       </item>
      </layout>
     </item>
