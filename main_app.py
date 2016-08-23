@@ -26,9 +26,9 @@ class usbBootThread(QThread):
                 cmd = ['sudo ./' + usbboot_version + '/build/out/usb_boot 1286 8174 ./' + usbboot_version + '/bin/images_a0/ 8141 "putty telnet://127.0.0.1:8141"']
                 subprocess.check_output(cmd, shell=True).decode("utf-8")
             else:
-                print('[Chirp] Please comfirm your operating system!(Windows/Ubuntu?)')
+                print('[CP] Please comfirm your operating system!(Windows/Ubuntu?)')
         except subprocess.CalledProcessError as e:
-            print('[Chirp] Please check the usbboot host folder!')
+            print('[CP] Please check the usbboot host folder!')
 
 class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def __init__(self):
