@@ -11,6 +11,7 @@ class AutoTest(QThread):
 
     def run(self):
         self.sig_update_ui.emit('AutoTest')
+        self.main_ui.under_autotesting = True
         while not self.main_ui.q.empty():
             self.sig_update_ui.emit('='*20)
             self.auto_running_task = self.main_ui.q.get()
@@ -18,3 +19,4 @@ class AutoTest(QThread):
             self.auto_running_task.wait()
 
         self.sig_update_ui.emit('AutoTest end')
+        self.main_ui.under_autotesting = False
