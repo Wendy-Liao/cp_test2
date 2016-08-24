@@ -30,6 +30,7 @@ class usbBootThread(QThread):
         except subprocess.CalledProcessError as e:
             print('[CP] Please check the usbboot host folder!')
 
+
 class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
@@ -41,7 +42,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         self.check_status_cmd = 'adb devices'
         self.check_status = False
-        #self.check_status_action = True
+        self.under_autotesting = False        #switch; lock buttons while under autotesting
+        self.under_testing = False    #switch; lock buttons while under testing
         self.bgtimer = QTimer()
         self.bgtimer.setInterval(1000)
         self.bgtimer.timeout.connect(lambda:self.update_ui(self.check_status))
@@ -58,20 +60,21 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         self.auto_test_task = auto_test.AutoTest(self)
         self.auto_test_task.sig_update_ui.connect(self.update_message)
-        self.firmware_version_task = firmware_version.FirmwareVersion()
+        self.firmware_version_task = firmware_version.FirmwareVersion(self)
         self.task_list.append(self.firmware_version_task)
-        self.nand_task = nand.Nand()
+        self.nand_task = nand.Nand(self)
         self.task_list.append(self.nand_task)
-        self.firmware_version_task2 = firmware_version.FirmwareVersion()
+        self.firmware_version_task2 = firmware_version.FirmwareVersion(self)
         self.task_list.append(self.firmware_version_task2)
-        self.nand_task2 = nand.Nand()
+        self.nand_task2 = nand.Nand(self)
         self.task_list.append(self.nand_task2)
-        self.firmware_version_task3 = firmware_version.FirmwareVersion()
+        self.firmware_version_task3 = firmware_version.FirmwareVersion(self)
         self.task_list.append(self.firmware_version_task3)
-        self.nand_task3 = nand.Nand()
+        self.nand_task3 = nand.Nand(self)
         self.task_list.append(self.nand_task3)
         for task in self.task_list:
             task.sig_update_ui.connect(self.update_message)
+
 
     def on_btn(self,button):
         running_btn_name = button.text()
@@ -111,9 +114,13 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         check_status = data
         if '2-1' in str(output):
             print('Log: ' + str(adb_return_code) + '; device connected')
-            self.enable_button()
             self.check_status = True
-        elif not ('2-1' in str(output)):
+            if self.under_autotesting or self.under_testing:
+                self.disable_button()
+            else:
+                self.enable_button()
+
+        else:
             print('Log: ' + str(adb_return_code) + '; decice disconnected')
             self.disable_button()
             self.check_status = False
