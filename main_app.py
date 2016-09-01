@@ -9,10 +9,12 @@ import os
 import time
 import firmware_version
 import nand
+import wifi
+import script_version
 import auto_test
 
 
-class usbBootThread(QThread):
+class UsbBootThread(QThread):
     def __init__(self):
         QThread.__init__(self)
 
@@ -39,24 +41,26 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         self.q = Queue()
         self.task_list = []
+        self.btn_dict = {'Auto Test': self.ui.autotest,
+                         'FirmwareVersion': self.ui.btnFirmwareVersion,
+                         'NAND': self.ui.btnNand,
+                         'Wifi': self.ui.btnWifi,
+                         'ScriptVersion': self.ui.btnScriptVersion,
+                         'Firmwareversion3': self.ui.btnFirmwareversion_3,
+                         'NAND3': self.ui.btnNand_3
+                         }
 
         self.check_status_cmd = 'adb devices'
         self.check_status = False
-        self.under_autotesting = False        #switch; lock buttons while under autotesting
+        self.under_auto_testing = False        #switch; lock buttons while under autotesting
         self.under_testing = False    #switch; lock buttons while under testing
         self.bgtimer = QTimer()
         self.bgtimer.setInterval(1000)
-        self.bgtimer.timeout.connect(lambda:self.update_ui(self.check_status))
+        self.bgtimer.timeout.connect(self.update_ui)
         self.bgtimer.start()
 
-        self.ui.btnFirmwareversion.clicked.connect(lambda: self.on_btn(self.ui.btnFirmwareversion))
-        self.ui.btnNand.clicked.connect(lambda: self.on_btn(self.ui.btnNand))
-        self.ui.btnFirmwareversion_2.clicked.connect(lambda: self.on_btn(self.ui.btnFirmwareversion_2))
-        self.ui.btnNand_2.clicked.connect(lambda: self.on_btn(self.ui.btnNand_2))
-        self.ui.btnFirmwareversion_3.clicked.connect(lambda: self.on_btn(self.ui.btnFirmwareversion_3))
-        self.ui.btnNand_3.clicked.connect(lambda: self.on_btn(self.ui.btnNand_3))
-        self.ui.autotest.clicked.connect(lambda: self.on_btn(self.ui.autotest))
-
+        for btn_object in self.btn_dict.values():
+            btn_object.clicked.connect(self.on_btn)
 
         self.auto_test_task = auto_test.AutoTest(self)
         self.auto_test_task.sig_update_ui.connect(self.update_message)
@@ -64,10 +68,10 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.task_list.append(self.firmware_version_task)
         self.nand_task = nand.Nand(self)
         self.task_list.append(self.nand_task)
-        self.firmware_version_task2 = firmware_version.FirmwareVersion(self)
-        self.task_list.append(self.firmware_version_task2)
-        self.nand_task2 = nand.Nand(self)
-        self.task_list.append(self.nand_task2)
+        self.wif_task = wifi.Wifi(self)
+        self.task_list.append(self.wif_task)
+        self.script_version_task = script_version.ScriptVersion(self)
+        self.task_list.append(self.script_version_task)
         self.firmware_version_task3 = firmware_version.FirmwareVersion(self)
         self.task_list.append(self.firmware_version_task3)
         self.nand_task3 = nand.Nand(self)
@@ -75,26 +79,25 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         for task in self.task_list:
             task.sig_update_ui.connect(self.update_message)
 
-
-    def on_btn(self,button):
-        running_btn_name = button.text()
+    def on_btn(self):
+        running_btn_name = self.sender().text()
         if running_btn_name == 'Auto Test':
             if self.q.empty():
                 for task in self.task_list:
                     self.q.put(task)
             self.auto_test_task.start()
 
-        if running_btn_name == 'Firmwareversion':
+        if running_btn_name == 'FirmwareVersion':
             self.firmware_version_task.start()
 
         if running_btn_name == 'NAND':
             self.nand_task.start()
 
-        if running_btn_name == 'Firmwareversion2':
-            self.firmware_version_task2.start()
+        if running_btn_name == 'Wifi':
+            self.wif_task.start()
 
-        if running_btn_name == 'NAND2':
-            self.nand_task2.start()
+        if running_btn_name == 'ScriptVersion':
+            self.script_version_task.start()
 
         if running_btn_name == 'Firmwareversion3':
             self.firmware_version_task3.start()
@@ -102,49 +105,55 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         if running_btn_name == 'NAND3':
             self.nand_task3.start()
 
-
     def update_message(self, data):
         self.ui.listWidget.addItem(data)
 
-
-    def update_ui(self, data):
-        adb_result = subprocess.Popen(self.check_status_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+    def update_ui(self):
+        adb_result = subprocess.Popen(self.check_status_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True,
+                                      universal_newlines=True)
         (output, err) = adb_result.communicate()
         adb_return_code = adb_result.wait()
-        check_status = data
-        if '2-1' in str(output):
-            print('Log: ' + str(adb_return_code) + '; device connected')
+        if '3-4' in output:
+            print('Log: %d' % adb_return_code + '; device connected')
             self.check_status = True
-            if self.under_autotesting or self.under_testing:
+            if self.under_auto_testing or self.under_testing:
                 self.disable_button()
             else:
                 self.enable_button()
-
         else:
-            print('Log: ' + str(adb_return_code) + '; decice disconnected')
+            print('Log: %d' % adb_return_code + '; decice disconnected')
             self.disable_button()
             self.check_status = False
 
+    def update_btn_status(self, item_name, status):
+        running_btn = self.btn_dict.get(item_name)
+        if status == 'Pass':
+            running_btn.setStyleSheet("background-color: rgb(0, 255, 0)")
+        elif status == 'Fail':
+            running_btn.setStyleSheet("background-color: rgb(255, 0, 0)")
 
     def enable_button(self):    #set button enable
-        self.ui.autotest.setEnabled(True)
-        self.ui.btnFirmwareversion.setEnabled(True)
-        self.ui.btnNand.setEnabled(True)
-        self.ui.btnFirmwareversion_2.setEnabled(True)
-        self.ui.btnNand_2.setEnabled(True)
-        self.ui.btnFirmwareversion_3.setEnabled(True)
-        self.ui.btnNand_3.setEnabled(True)
-
+        for btn in self.btn_dict.values():
+            btn.setEnabled(True)
 
     def disable_button(self):    #set button disable to click
-        self.ui.autotest.setEnabled(False)
-        self.ui.btnFirmwareversion.setEnabled(False)
-        self.ui.btnNand.setEnabled(False)
-        self.ui.btnFirmwareversion_2.setEnabled(False)
-        self.ui.btnNand_2.setEnabled(False)
-        self.ui.btnFirmwareversion_3.setEnabled(False)
-        self.ui.btnNand_3.setEnabled(False)
+        for btn in self.btn_dict.values():
+            btn.setEnabled(False)
 
+    def log_to_file(self, item_name, status, description):
+        serial_number = self.ui.lineEdit.text()
+        timestamp = time.strftime("%Y%m%d%H%M", time.localtime())
+        log_summary = './log/' + serial_number + '/' + timestamp + '.log'
+        status_summary = './log/' + serial_number + '/status_summary.log'
+        os.makedirs(os.path.dirname(log_summary), exist_ok=True)
+        os.makedirs(os.path.dirname(status_summary), exist_ok=True)
+        with open(log_summary, 'a') as f:
+            f.write('name :' + item_name + '\n' + description + '\n')
+            f.close()
+
+        with open(status_summary, 'a') as f1:
+            f1.write('name :' + item_name + '\n' + 'status :' + status + '\n')
+            f1.close()
 
     def closeEvent(self, event):
         print('Bye')
@@ -152,8 +161,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 if __name__ == "__main__":
     import sys
 
-    usbt = usbBootThread()  #for USB boot thread
-    usbt.start()
+    #usbt = UsbBootThread()  #for USB boot thread
+    #usbt.start()
 
     app = QtWidgets.QApplication(sys.argv)
     w = MainWindow()
