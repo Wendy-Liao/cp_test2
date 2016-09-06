@@ -52,13 +52,14 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         self.check_status_cmd = 'adb devices'
         self.check_status = False
-        self.under_auto_testing = False        #switch; lock buttons while under autotesting
-        self.under_testing = False    #switch; lock buttons while under testing
+        self.under_auto_testing = False        # switch; lock buttons while under autotesting
+        self.under_testing = False    # switch; lock buttons while under testing
         self.bgtimer = QTimer()
         self.bgtimer.setInterval(1000)
         self.bgtimer.timeout.connect(self.update_ui)
         self.bgtimer.start()
 
+        self.ui.lineEdit.returnPressed.connect(self.ui.autotest.click)
         for btn_object in self.btn_dict.values():
             btn_object.clicked.connect(self.on_btn)
 
@@ -106,6 +107,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.nand_task3.start()
 
     def update_message(self, data):
+        self.ui.listWidget.scrollToBottom()
         self.ui.listWidget.addItem(data)
 
     def update_ui(self):
@@ -113,15 +115,22 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                                       universal_newlines=True)
         (output, err) = adb_result.communicate()
         adb_return_code = adb_result.wait()
+        self.ui.lineEdit.setFocus()
         if '3-4' in output:
             print('Log: %d' % adb_return_code + '; device connected')
             self.check_status = True
             if self.under_auto_testing or self.under_testing:
                 self.disable_button()
+                self.ui.lineEdit.setEnabled(False)
             else:
                 self.enable_button()
+                self.ui.lineEdit.setEnabled(True)
         else:
-            print('Log: %d' % adb_return_code + '; decice disconnected')
+            print('Log: %d' % adb_return_code + '; device disconnected')
+            if self.q.empty():
+                self.ui.lineEdit.clear()
+                for btn in self.btn_dict.values():
+                    btn.setStyleSheet("background-color: rgb(242, 241, 240)")
             self.disable_button()
             self.check_status = False
 
@@ -132,11 +141,11 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         elif status == 'Fail':
             running_btn.setStyleSheet("background-color: rgb(255, 0, 0)")
 
-    def enable_button(self):    #set button enable
+    def enable_button(self):    # set button enable
         for btn in self.btn_dict.values():
             btn.setEnabled(True)
 
-    def disable_button(self):    #set button disable to click
+    def disable_button(self):    # set button disable to click
         for btn in self.btn_dict.values():
             btn.setEnabled(False)
 
